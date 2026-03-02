@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Books</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width:800px; margin:24px auto; padding:0 16px }
+    h1 { text-align:center }
+    #books-output { display:block; margin-top:20px }
+    .book { border:1px solid #ddd; padding:12px; border-radius:6px; margin-bottom:10px }
+    .meta { color:#555; font-size:14px }
+  </style>
+</head>
+<body>
+  <h1>Books</h1>
+  <div id="books-output">Loading books…</div>
+
+  <script>
+    async function loadBooks() {
+      const out = document.getElementById('books-output');
+      try {
+        const response = await fetch('books.json');
+        // First level of error checking: HTTP status
+        if (!response.ok) {
+          console.error(`Network response was not ok - Status: ${response.status}`);
+          out.innerHTML = `<p style="color:crimson">Error loading books (status ${response.status}). Check console for details.</p>`;
+          return;
+        }
+
+        // Second level: handle JSON parsing or other runtime errors
+        let books;
+        try {
+          books = await response.json();
+        } catch (parseErr) {
+          console.error('Failed to parse JSON:', parseErr);
+          out.innerHTML = '<p style="color:crimson">Invalid book data. Please check the JSON file.</p>';
+          return;
+        }
+
+        // Display the books
+        if (!Array.isArray(books) || books.length === 0) {
+          out.innerHTML = '<p>No books found.</p>';
+          return;
+        }
+
+        out.innerHTML = books.map(b => `
+          <div class="book">
+            <div><strong>${b.title}</strong></div>
+            <div class="meta">${b.author} — ${b.year} — ${b.isRead ? 'Read' : 'Not read yet'}</div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        // Catches network errors, CORS, etc.
+        console.error('Fetch error:', err);
+        out.innerHTML = '<p style="color:crimson">⚠️ Failed to load books. Please try again later.</p>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadBooks);
+  </script>
+</body>
+</html>
